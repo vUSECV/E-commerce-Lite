@@ -25,7 +25,7 @@ namespace ProductService.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
+        public async Task<IActionResult> Create(CreateProductDto dto)
         {
             var product = new Product
             {

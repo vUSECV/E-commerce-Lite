@@ -36,7 +36,7 @@ namespace OrderService.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+        public async Task<IActionResult> Create(CreateOrderDto dto)
         {
             var product = await _productClient.GetProductAsync(dto.ProductId);
             if (product is null)

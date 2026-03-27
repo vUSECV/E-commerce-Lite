@@ -21,21 +21,17 @@ namespace OrderService.Kafka
         public async Task PublishAsync(string topic, object message)
         {
             var json = JsonSerializer.Serialize(message);
-            try
+            await _producer.ProduceAsync(topic, new Message<string, string>
             {
-                await _producer.ProduceAsync(topic, new Message<string, string>
-                {
-                    Key = Guid.NewGuid().ToString(),
-                    Value = json
-                });
-                _logger.LogInformation("[Kafka] Published to {Topic}: {Message}", topic, json);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[Kafka] Failed to publish to {Topic}", topic);
-            }
+                Key = Guid.NewGuid().ToString(),
+                Value = json
+            });
+            _logger.LogInformation("[Kafka] Published to {Topic}: {Message}", topic, json);
         }
 
-        public void Dispose() => _producer.Dispose();
+        public void Dispose()
+        {
+            _producer.Dispose();
+        }
     }
 }

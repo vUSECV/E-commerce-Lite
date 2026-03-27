@@ -40,19 +40,8 @@ namespace NotificationService.Kafka
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
-                {
-                    var result = consumer.Consume(stoppingToken);
-                    HandleMessage(result.Topic, result.Message.Value);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[NotificationService] Ошибка при обработке сообщения");
-                }
+                var result = consumer.Consume(stoppingToken);
+                HandleMessage(result.Topic, result.Message.Value);
             }
 
             consumer.Close();

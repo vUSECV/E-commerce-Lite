@@ -18,7 +18,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost("process")]
-        public async Task<IActionResult> Process([FromBody] ProcessPaymentDto dto)
+        public async Task<IActionResult> Process(ProcessPaymentDto dto)
         {
             var payment = new Payment
             {

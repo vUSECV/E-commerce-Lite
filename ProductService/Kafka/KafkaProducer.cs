@@ -36,6 +36,9 @@ namespace ProductService.Kafka
             }
         }
 
-        public void Dispose() => _producer.Dispose();
+        public void Dispose()
+        {
+            _producer.Dispose();
+        }
     }
 }
