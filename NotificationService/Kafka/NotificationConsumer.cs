@@ -11,13 +11,11 @@ namespace NotificationService.Kafka
     public class NotificationConsumer : BackgroundService
     {
         private readonly IConfiguration _config;
-        private readonly ILogger<NotificationConsumer> _logger;
         private readonly string[] _topics = { "product-created", "order-created" };
 
         public NotificationConsumer(IConfiguration config, ILogger<NotificationConsumer> logger)
         {
             _config = config;
-            _logger = logger;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

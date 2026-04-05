@@ -1,3 +1,4 @@
+using OrderService.Models;
 using System.Text.Json;
 
 namespace OrderService.HttpClients
@@ -13,34 +14,14 @@ namespace OrderService.HttpClients
 
         public async Task<ProductInfo?> GetProductAsync(int productId)
         {
-            try
-            {
-                var requestUrl = $"api/product/{productId}";
+            var requestUrl = $"api/product/{productId}";
 
-                var response = await _httpClient.GetAsync(requestUrl);
+            var response = await _httpClient.GetAsync(requestUrl);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var err = await response.Content.ReadAsStringAsync();
-                    return null;
-                }
+            var json = await response.Content.ReadAsStringAsync();
 
-                var json = await response.Content.ReadAsStringAsync();
-
-                return JsonSerializer.Deserialize<ProductInfo>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            return JsonSerializer.Deserialize<ProductInfo>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
-    }
-
-    public class ProductInfo
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public decimal Price { get; set; }
     }
 }

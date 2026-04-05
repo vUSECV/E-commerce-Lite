@@ -16,7 +16,6 @@ namespace OrderService.Controllers
         private readonly ProductHttpClient _productClient;
         private readonly InventoryHttpClient _inventoryClient;
         private readonly PaymentHttpClient _paymentClient;
-        private readonly ILogger<OrderController> _logger;
         private readonly KafkaProducer _kafka;
 
         public OrderController(
@@ -24,14 +23,12 @@ namespace OrderService.Controllers
             ProductHttpClient productClient,
             InventoryHttpClient inventoryClient,
             PaymentHttpClient paymentClient,
-            ILogger<OrderController> logger,
             KafkaProducer kafka)
         {
             _db = db;
             _productClient = productClient;
             _inventoryClient = inventoryClient;
             _paymentClient = paymentClient;
-            _logger = logger;
             _kafka = kafka;
         }
 
@@ -41,7 +38,6 @@ namespace OrderService.Controllers
             var product = await _productClient.GetProductAsync(dto.ProductId);
             if (product is null)
             {
-                _logger.LogWarning("Продукт {ProductId} не найден", dto.ProductId);
                 return BadRequest(new { message = $"Продукт {dto.ProductId} не найден" });
             }
 
@@ -57,21 +53,16 @@ namespace OrderService.Controllers
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            _logger.LogInformation("Заказ {OrderId} создан, продукт зарезервирован...", order.Id);
-
             var reserved = await _inventoryClient.ReserveStockAsync(dto.ProductId, dto.Quantity);
             if (!reserved)
             {
                 order.Status = OrderStatus.Cancelled;
                 await _db.SaveChangesAsync();
-                _logger.LogWarning("Заказ {OrderId} отменен: недостаточно товара на складе", order.Id);
                 return BadRequest(new { message = "недостаточно товара на складе", orderId = order.Id, status = order.Status.ToString() });
             }
 
             order.Status = OrderStatus.InventoryReserved;
             await _db.SaveChangesAsync();
-
-            _logger.LogInformation("Заказ {OrderId} зарезервирован товар, процесс оплаты...", order.Id);
 
             order.Status = OrderStatus.PaymentProcessing;
             await _db.SaveChangesAsync();
@@ -83,7 +74,6 @@ namespace OrderService.Controllers
                 await _inventoryClient.ReleaseStockAsync(dto.ProductId, dto.Quantity);
                 order.Status = OrderStatus.Failed;
                 await _db.SaveChangesAsync();
-                _logger.LogWarning("Заказ {OrderId} ошибка: платеж не удался", order.Id);
                 return Ok(new
                 {
                     message = "Ошибка платежа, инвентарь выпущен",
@@ -96,7 +86,6 @@ namespace OrderService.Controllers
             order.Status = OrderStatus.Completed;
             await _db.SaveChangesAsync();
 
-            _logger.LogInformation("Заказ {OrderId} удался", order.Id);
             await _kafka.PublishAsync("order-created", new
             {
                 OrderId = order.Id,
